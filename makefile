@@ -15,3 +15,22 @@ mykernel.bin: linker.ld $(objects)
 
 install: mykernel.bin
 	sudo cp $< /boot/mykernel.bin
+
+mykernel.iso: mykernel.bin
+	mkdir iso
+	mkdir iso/boot
+	mkdir iso/boot/grub
+	cp mykernel.bin iso/boot/mykernel.bin
+	echo 'set timeout=0'                      > iso/boot/grub/grub.cfg
+	echo 'set default=0'                     >> iso/boot/grub/grub.cfg
+	echo ''                                  >> iso/boot/grub/grub.cfg
+	echo 'menuentry "LainuxOS" {' >> iso/boot/grub/grub.cfg
+	echo '  multiboot /boot/mykernel.bin'    >> iso/boot/grub/grub.cfg
+	echo '  boot'                            >> iso/boot/grub/grub.cfg
+	echo '}'                                 >> iso/boot/grub/grub.cfg
+	grub-mkrescue --output=mykernel.iso iso
+	rm -rf iso
+
+run: mykernel.iso
+	(killall VirtualBoxVM && sleep 1) || true
+	VirtualBoxVM --startvm 'Lainux' &
