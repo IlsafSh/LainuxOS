@@ -2,7 +2,7 @@ GCCPARAMS = -m32 -Iinclude -fno-use-cxa-atexit -nostdlib -fno-builtin -fno-rtti 
 ASPARAMS = --32
 LDPARAMS = -melf_i386
 
-objects = loader.o gdt.o port.o kernel.o
+objects = loader.o gdt.o port.o interruptstubs.o interrupts.o kernel.o
 
 %.o: %.cpp
 	gcc $(GCCPARAMS) -c -o $@ $<
@@ -12,6 +12,10 @@ objects = loader.o gdt.o port.o kernel.o
 
 mykernel.bin: linker.ld $(objects)
 	ld $(LDPARAMS) -T $< -o $@ $(objects)
+
+run: mykernel.iso
+	(killall VirtualBoxVM && sleep 1) || true
+	VirtualBoxVM --startvm 'Lainux' &
 
 install: mykernel.bin
 	sudo cp $< /boot/mykernel.bin
@@ -30,10 +34,6 @@ mykernel.iso: mykernel.bin
 	echo '}'                                 >> iso/boot/grub/grub.cfg
 	grub-mkrescue --output=mykernel.iso iso
 	rm -rf iso
-
-run: mykernel.iso
-	(killall VirtualBoxVM && sleep 1) || true
-	VirtualBoxVM --startvm 'Lainux' &
 
 .PHONY: clean
 clean:
